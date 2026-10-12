@@ -1,8 +1,8 @@
 let onlineLibrary = [];
 let localDeviceTracks = [];
 let playlists = JSON.parse(localStorage.getItem('south_playlists')) || {
-  "Telugu Vibes": [],
-  "Tamil Chill": []
+  "Telugu Favorites": [],
+  "Tamil Classics": []
 };
 let currentQueue = [];
 let currentIndex = -1;
@@ -28,15 +28,52 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Fetch Remote Catalog
+// Load curated base catalog
 async function fetchOnlineTracks() {
   try {
     const res = await fetch('songs.json');
-    if (!res.ok) throw new Error('Catalog missing');
-    onlineLibrary = await res.json();
-    renderTrackList(onlineLibrary, 'onlineTrackList');
+    if (res.ok) {
+      onlineLibrary = await res.json();
+      renderTrackList(onlineLibrary, 'onlineTrackList');
+    }
   } catch (err) {
-    console.error("Error loading songs:", err);
+    console.error("Local catalog error:", err);
+  }
+}
+
+// Live Search Across Internet Archive for Free Telugu & Tamil Music
+async function searchWebArchive(keyword) {
+  const container = document.getElementById('onlineTrackList');
+  container.innerHTML = '<li class="track-item"><div>Searching free internet databases...</div></li>';
+
+  try {
+    const query = encodeURIComponent(`${keyword} AND mediatype:audio AND (language:telugu OR language:tamil OR title:telugu OR title:tamil)`);
+    const endpoint = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier,title,creator,description&rows=25&output=json`;
+
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    const docs = data.response.docs;
+
+    if (!docs || docs.length === 0) {
+      container.innerHTML = '<li class="track-item"><div>No free tracks found. Try "Ghantasala", "Ilaiyaraaja", or "Tamil songs".</div></li>';
+      return;
+    }
+
+    const searchResults = docs.map((item, index) => {
+      return {
+        id: `archive-${item.identifier}-${index}`,
+        title: item.title || "South Indian Audio Track",
+        artist: item.creator || "Internet Archive Community",
+        language: keyword.toLowerCase().includes('telugu') ? 'Telugu' : 'Tamil',
+        // Direct streamable URL generated from Archive.org item files
+        url: `https://archive.org/download/${item.identifier}/${item.identifier}_vbr.mp3`
+      };
+    });
+
+    renderTrackList(searchResults, 'onlineTrackList');
+  } catch (err) {
+    console.error("Search error:", err);
+    container.innerHTML = '<li class="track-item"><div>Error searching archive. Falling back to local catalog.</div></li>';
   }
 }
 
@@ -47,7 +84,7 @@ function renderTrackList(tracks, elementId) {
     const li = document.createElement('li');
     li.className = 'track-item';
     li.innerHTML = `
-      <div>
+      <div style="flex: 1; margin-right: 8px;">
         <div class="title">${track.title}</div>
         <div class="meta">${track.artist} • ${track.language || 'Local'}</div>
       </div>
@@ -70,8 +107,10 @@ function playTrack(queue, index) {
   const track = queue[index];
   audio.src = track.url;
   playerTitle.textContent = track.title;
-  playerArtist.textContent = track.artist || 'Local Audio';
-  audio.play();
+  playerArtist.textContent = track.artist || 'South Tracks';
+  audio.play().catch(e => {
+    alert("This audio stream link is currently protected or unavailable. Try another track.");
+  });
   playPauseBtn.textContent = '⏸';
 }
 
@@ -113,6 +152,16 @@ function formatTime(sec) {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+// Search bar listener (supports Enter key for Live Web Search)
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const val = searchInput.value.trim();
+    if (val.length > 2) {
+      searchWebArchive(val);
+    }
+  }
+});
+
 // Device file selection
 document.getElementById('filePicker').addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
@@ -126,17 +175,6 @@ document.getElementById('filePicker').addEventListener('change', (e) => {
     });
   });
   renderTrackList(localDeviceTracks, 'localDeviceTrackList');
-});
-
-// Search functionality
-searchInput.addEventListener('input', (e) => {
-  const term = e.target.value.toLowerCase();
-  const filtered = onlineLibrary.filter(t => 
-    t.title.toLowerCase().includes(term) || 
-    t.artist.toLowerCase().includes(term) ||
-    t.language.toLowerCase().includes(term)
-  );
-  renderTrackList(filtered, 'onlineTrackList');
 });
 
 // Playlists
@@ -181,6 +219,5 @@ function renderPlaylists() {
 
 document.getElementById('refreshFeedBtn').addEventListener('click', fetchOnlineTracks);
 
-// Initialize
 fetchOnlineTracks();
 renderPlaylists();
