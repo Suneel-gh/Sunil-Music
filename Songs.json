@@ -1,0 +1,23 @@
+[
+  {
+    "id": "tel-01",
+    "title": "Samaja Varagamana (Carnatic Fusion)",
+    "artist": "Open Instrumental",
+    "language": "Telugu",
+    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+  },
+  {
+    "id": "tam-01",
+    "title": "Vaseegara (Violin & Flute)",
+    "artist": "Acoustic South",
+    "language": "Tamil",
+    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+  },
+  {
+    "id": "tel-02",
+    "title": "Sitar Rhythm Beats",
+    "artist": "Deccan Beats",
+    "language": "Telugu",
+    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+  }
+]
