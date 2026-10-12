@@ -1,23 +1,37 @@
 [
   {
     "id": "tel-01",
-    "title": "Samaja Varagamana (Carnatic Fusion)",
-    "artist": "Open Instrumental",
+    "title": "Siva Sankari - Jagadeka Veeruni Katha",
+    "artist": "Ghantasala",
     "language": "Telugu",
-    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  },
-  {
-    "id": "tam-01",
-    "title": "Vaseegara (Violin & Flute)",
-    "artist": "Acoustic South",
-    "language": "Tamil",
-    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+    "url": "https://archive.org/download/TeluguOldGoldenHits/Siva%20Sankari.mp3"
   },
   {
     "id": "tel-02",
-    "title": "Sitar Rhythm Beats",
-    "artist": "Deccan Beats",
+    "title": "Mounamelanoyi - Sagara Sangamam",
+    "artist": "S.P. Balasubrahmanyam & S. Janaki",
     "language": "Telugu",
-    "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    "url": "https://archive.org/download/TeluguOldGoldenHits/Mounamelanoyi.mp3"
+  },
+  {
+    "id": "tam-01",
+    "title": "Kanne Kalaimane - Moondram Pirai",
+    "artist": "K.J. Yesudas (Ilaiyaraaja)",
+    "language": "Tamil",
+    "url": "https://archive.org/download/TamilOldGoldenHits/Kanne%20Kalaimane.mp3"
+  },
+  {
+    "id": "tam-02",
+    "title": "Senthoora Poove - 16 Vayathinile",
+    "artist": "S. Janaki (Ilaiyaraaja)",
+    "language": "Tamil",
+    "url": "https://archive.org/download/TamilOldGoldenHits/Senthoora%20Poove.mp3"
+  },
+  {
+    "id": "tel-03",
+    "title": "Telugu Classical Devotional (Nadaswaram)",
+    "artist": "Traditional South Heritage",
+    "language": "Telugu",
+    "url": "https://ia800302.us.archive.org/1/items/ClassicalCarnatic/VatapiGanapatim.mp3"
   }
 ]
