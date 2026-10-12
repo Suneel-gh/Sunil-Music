@@ -1,4 +1,43 @@
-let onlineLibrary = [];
+// Hardcoded default tracks so it NEVER falls back to dummy beats
+let defaultCatalog = [
+  {
+    id: "tel-01",
+    title: "Siva Sankari - Jagadeka Veeruni Katha",
+    artist: "Ghantasala",
+    language: "Telugu",
+    url: "https://archive.org/download/TeluguOldGoldenHits/Siva%20Sankari.mp3"
+  },
+  {
+    id: "tel-02",
+    title: "Mounamelanoyi - Sagara Sangamam",
+    artist: "S.P. Balasubrahmanyam & S. Janaki",
+    language: "Telugu",
+    url: "https://archive.org/download/TeluguOldGoldenHits/Mounamelanoyi.mp3"
+  },
+  {
+    id: "tam-01",
+    title: "Kanne Kalaimane - Moondram Pirai",
+    artist: "K.J. Yesudas (Ilaiyaraaja)",
+    language: "Tamil",
+    url: "https://archive.org/download/TamilOldGoldenHits/Kanne%20Kalaimane.mp3"
+  },
+  {
+    id: "tam-02",
+    title: "Senthoora Poove - 16 Vayathinile",
+    artist: "S. Janaki (Ilaiyaraaja)",
+    language: "Tamil",
+    url: "https://archive.org/download/TamilOldGoldenHits/Senthoora%20Poove.mp3"
+  },
+  {
+    id: "tel-03",
+    title: "Vatapi Ganapatim (Carnatic)",
+    artist: "Classical South",
+    language: "Telugu",
+    url: "https://ia800302.us.archive.org/1/items/ClassicalCarnatic/VatapiGanapatim.mp3"
+  }
+];
+
+let onlineLibrary = [...defaultCatalog];
 let localDeviceTracks = [];
 let playlists = JSON.parse(localStorage.getItem('south_playlists')) || {
   "Telugu Favorites": [],
@@ -27,55 +66,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById(`${btn.dataset.tab}Tab`).classList.add('active');
   });
 });
-
-// Load curated base catalog
-async function fetchOnlineTracks() {
-  try {
-    const res = await fetch('songs.json');
-    if (res.ok) {
-      onlineLibrary = await res.json();
-      renderTrackList(onlineLibrary, 'onlineTrackList');
-    }
-  } catch (err) {
-    console.error("Local catalog error:", err);
-  }
-}
-
-// Live Search Across Internet Archive for Free Telugu & Tamil Music
-async function searchWebArchive(keyword) {
-  const container = document.getElementById('onlineTrackList');
-  container.innerHTML = '<li class="track-item"><div>Searching free internet databases...</div></li>';
-
-  try {
-    const query = encodeURIComponent(`${keyword} AND mediatype:audio AND (language:telugu OR language:tamil OR title:telugu OR title:tamil)`);
-    const endpoint = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier,title,creator,description&rows=25&output=json`;
-
-    const res = await fetch(endpoint);
-    const data = await res.json();
-    const docs = data.response.docs;
-
-    if (!docs || docs.length === 0) {
-      container.innerHTML = '<li class="track-item"><div>No free tracks found. Try "Ghantasala", "Ilaiyaraaja", or "Tamil songs".</div></li>';
-      return;
-    }
-
-    const searchResults = docs.map((item, index) => {
-      return {
-        id: `archive-${item.identifier}-${index}`,
-        title: item.title || "South Indian Audio Track",
-        artist: item.creator || "Internet Archive Community",
-        language: keyword.toLowerCase().includes('telugu') ? 'Telugu' : 'Tamil',
-        // Direct streamable URL generated from Archive.org item files
-        url: `https://archive.org/download/${item.identifier}/${item.identifier}_vbr.mp3`
-      };
-    });
-
-    renderTrackList(searchResults, 'onlineTrackList');
-  } catch (err) {
-    console.error("Search error:", err);
-    container.innerHTML = '<li class="track-item"><div>Error searching archive. Falling back to local catalog.</div></li>';
-  }
-}
 
 function renderTrackList(tracks, elementId) {
   const container = document.getElementById(elementId);
@@ -109,7 +99,7 @@ function playTrack(queue, index) {
   playerTitle.textContent = track.title;
   playerArtist.textContent = track.artist || 'South Tracks';
   audio.play().catch(e => {
-    alert("This audio stream link is currently protected or unavailable. Try another track.");
+    alert("Audio source error. Please tap another track.");
   });
   playPauseBtn.textContent = '⏸';
 }
@@ -152,17 +142,51 @@ function formatTime(sec) {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-// Search bar listener (supports Enter key for Live Web Search)
+// Live Internet Archive Search (Triggers on Mobile Keyboard Enter/Search)
+async function searchWebArchive(keyword) {
+  const container = document.getElementById('onlineTrackList');
+  container.innerHTML = '<li class="track-item"><div>Searching free internet databases...</div></li>';
+
+  try {
+    const query = encodeURIComponent(`${keyword} AND mediatype:audio AND (language:telugu OR language:tamil OR title:telugu OR title:tamil)`);
+    const endpoint = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier,title,creator&rows=20&output=json`;
+
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    const docs = data.response.docs;
+
+    if (!docs || docs.length === 0) {
+      container.innerHTML = '<li class="track-item"><div>No tracks found. Try searching: Ghantasala, Ilaiyaraaja, or Carnatic.</div></li>';
+      return;
+    }
+
+    const searchResults = docs.map((item, index) => ({
+      id: `arc-${item.identifier}-${index}`,
+      title: item.title || "South Indian Audio Track",
+      artist: item.creator || "Archive Artist",
+      language: keyword.toLowerCase().includes('telugu') ? 'Telugu' : 'Tamil',
+      url: `https://archive.org/download/${item.identifier}/${item.identifier}_vbr.mp3`
+    }));
+
+    renderTrackList(searchResults, 'onlineTrackList');
+  } catch (err) {
+    container.innerHTML = '<li class="track-item"><div>Search failed. Loading default catalog.</div></li>';
+    renderTrackList(defaultCatalog, 'onlineTrackList');
+  }
+}
+
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const val = searchInput.value.trim();
-    if (val.length > 2) {
+    if (val.length > 1) {
       searchWebArchive(val);
+    } else {
+      renderTrackList(defaultCatalog, 'onlineTrackList');
     }
   }
 });
 
-// Device file selection
+// Device Storage Picker
 document.getElementById('filePicker').addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
   files.forEach((f, i) => {
@@ -177,10 +201,9 @@ document.getElementById('filePicker').addEventListener('change', (e) => {
   renderTrackList(localDeviceTracks, 'localDeviceTrackList');
 });
 
-// Playlists
 function promptAddToPlaylist(track) {
   const names = Object.keys(playlists);
-  const choice = prompt(`Select playlist name:\n${names.join(', ')}`);
+  const choice = prompt(`Add to which playlist?\n${names.join('\n')}`);
   if (choice && playlists[choice]) {
     playlists[choice].push(track);
     localStorage.setItem('south_playlists', JSON.stringify(playlists));
@@ -217,7 +240,10 @@ function renderPlaylists() {
   });
 }
 
-document.getElementById('refreshFeedBtn').addEventListener('click', fetchOnlineTracks);
+document.getElementById('refreshFeedBtn').addEventListener('click', () => {
+  renderTrackList(defaultCatalog, 'onlineTrackList');
+});
 
-fetchOnlineTracks();
+// Initial Render
+renderTrackList(defaultCatalog, 'onlineTrackList');
 renderPlaylists();
